@@ -1,0 +1,9 @@
+{
+    "manifest_version": 3,
+    "name": "GPT Visualizer Chrome extension",
+    "version": "1.0.0",
+    "description": "A Chrome extension built to visualize the chats in ChatGPT  ",
+    "action": {
+        "default_popup": "index.html"
+    }
+}
