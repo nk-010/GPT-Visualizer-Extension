@@ -3,7 +3,15 @@
     "name": "GPT Visualizer Chrome extension",
     "version": "1.0.0",
     "description": "A Chrome extension built to visualize the chats in ChatGPT  ",
-    "action": {
-        "default_popup": "index.html"
+    "permissions": [
+        "sidePanel"
+    ],
+    "action": {},
+    "side_panel": {
+        "default_path": "index.html"
+    },
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
     }
 }
