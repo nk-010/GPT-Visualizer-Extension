@@ -15,6 +15,11 @@ export const lightTheme = {
             headerHeight: 64,
             headerPadding: "0 24px",
         },
+        Button: {
+            colorPrimary: "#74AA9C",
+            colorPrimaryHover: "#5f988a",
+            colorPrimaryActive: "#4d7f73",
+        }
     },
 };
 

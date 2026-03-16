@@ -9,6 +9,7 @@ console.log('Building with NODE_ENV:', process.env.NODE_ENV);
 
 export default defineConfig({
   plugins: [
+    crx({ manifest: { ...manifest } }),
     hotReloadExtension({
       log: true,
       backgroundPath: "background.js",
@@ -18,7 +19,6 @@ export default defineConfig({
       }
     }),
     react(),
-    crx({ manifest }),
   ],
   server: {
     cors: {
