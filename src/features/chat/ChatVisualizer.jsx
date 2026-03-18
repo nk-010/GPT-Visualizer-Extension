@@ -48,23 +48,6 @@ const ChatVisualizer = () => {
 
         chrome.runtime.onMessage.addListener(handleMessage); //adding the message listener
 
-        //fetching the initial data when the extension is loaded
-        const fetchInitialData = () => {
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                const activeTab = tabs[0];
-                if (activeTab && (activeTab.url?.includes('chatgpt.com') || activeTab.url?.includes('chat.openai.com'))) {
-                    chrome.tabs.sendMessage(activeTab.id, { type: 'GET_CHAT' }, (response) => {
-                        if (chrome.runtime.lastError) return;
-                        if (response && response.messages) {
-                            setMessages(response.messages);
-                        }
-                    });
-                }
-            });
-        };
-
-        fetchInitialData();
-
         return () => chrome.runtime.onMessage.removeListener(handleMessage); //removing the message listener when the component unmounts
     }, []);
 

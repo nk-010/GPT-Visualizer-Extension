@@ -2,7 +2,7 @@
 /* Getting the information through script injection */
 
 // Inject fetch interceptor
-function injectFetchHook() {
+export function injectFetchHook() {
     const script = document.createElement("script");
     script.src = chrome.runtime.getURL("src/fetch.js");
     script.type = "text/javascript";
