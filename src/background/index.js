@@ -1,28 +1,8 @@
-import contentScript from '../content/index.js?script';   //importing the content script (vite specific)
 
 //setting the side panel behavior (open panel on action click)
 chrome.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((error) => console.error(error));
-
-
-//injecting the content script (for the already open tabs when extension is installed)
-chrome.runtime.onInstalled.addListener(async () => {
-    const tabs = await chrome.tabs.query({
-        url: [
-            "https://chat.openai.com/*",
-            "https://chatgpt.com/*"
-        ]
-    });
-
-    for (const tab of tabs) {
-        chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            files: [contentScript]
-        });
-    }
-});
-
 
 
 function identifyTabChange() {
@@ -74,3 +54,18 @@ function identifyTabChange() {
 
 // Call the function to start listening
 identifyTabChange();
+
+/*
+   Listen for messages from the side panel (UI)
+   and forward them to the content script.
+*/
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'SIDE_PANEL_OPENED') {
+        // Forward the event to the active tab's content script
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]?.id) {
+                chrome.tabs.sendMessage(tabs[0].id, { type: 'SIDE_PANEL_OPENED' });
+            }
+        });
+    }
+});

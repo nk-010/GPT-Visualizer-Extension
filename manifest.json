@@ -46,7 +46,7 @@
             "js": [
                 "src/content/index.js"
             ],
-            "run_at": "document_idle"
+            "run_at": "document_start"
         }
     ]
 }

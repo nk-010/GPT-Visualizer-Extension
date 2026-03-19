@@ -51,17 +51,18 @@ window.addEventListener("message", (event) => {
 });
 
 
-/* Listen for page change messages from background.js */
+/* Listen for messages from background.js */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === "PAGE_CHANGED") {
+    if (request.type === "PAGE_CHANGED" || request.type === "SIDE_PANEL_OPENED") {
 
-        chrome.runtime.sendMessage({
-            type: "PAGE_CHANGED",
-            url: location.href
-        });
-
-        // Ensure fetch hook is injected (guard in fetch.js handles redundancy)
-        injectFetchHook();
+        if (request.type === "PAGE_CHANGED") {
+            chrome.runtime.sendMessage({
+                type: "PAGE_CHANGED",
+                url: location.href
+            });
+            // Ensure fetch hook is injected (guard in fetch.js handles redundancy)
+            injectFetchHook();
+        }
 
         // sending the current data to the UI to display
         chrome.runtime.sendMessage({

@@ -53,3 +53,6 @@ npm run preview
 - This project uses Ant Design (`antd`) for UI components and theming in `src/ui`.
 - Keep tests close to source files (`.test.js`/`.test.jsx`).
 - If extension behavior changes, rebuild and reload in Chrome.
+
+## ⚠️ Security & Dependencies
+- **Known advisory**: A transitive high-severity advisory exists in `rollup` via `@crxjs/vite-plugin` (CVE: path traversal in versions <2.80.0). This affects the build toolchain but not the extension runtime code. Monitor upstream releases for a patch to `@crxjs/vite-plugin` with updated `rollup` dependency. Run `npm audit` before each release to verify status.

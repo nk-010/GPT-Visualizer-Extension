@@ -30,11 +30,11 @@ const ChatVisualizer = () => {
         // Listen for messages from content script
         const handleMessage = (request, sender, sendResponse) => {
             if (request.type === 'CHAT_DATA') {
-                console.log('Received chat data:', request?.messages);
+                // console.log('Received chat data:', request?.messages);
                 setMessages(request?.messages);
                 setIsLoading(false);
             } else if (request.type === 'PAGE_CHANGED') {
-                console.log('Page navigated to:', request?.url);
+                // console.log('Page navigated to:', request?.url);
                 // Only clear if it's a new conversation path
                 const url = request?.url;
                 const regex = /\/c\/|\/g\//; // Matches either "/c/" OR "/g/"

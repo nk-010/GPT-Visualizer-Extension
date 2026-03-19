@@ -11,6 +11,8 @@
         const response = await originalFetch.apply(this, args);
         const url = typeof args[0] === "string" ? args[0] : args[0].url;
 
+        // console.log("[GPT Visualizer] Fetch called:", url);
+
         //intercepting the API call to the conversation endpoint
         if (url && url.includes("/backend-api/conversation/")) {
             const clone = response.clone(); //cloning the response to avoid modifying the original response
@@ -23,6 +25,8 @@
                         url: window.location.href
                     }, window.location.origin);
                 }
+
+                // console.log("[GPT Visualizer] Conversation data received in fetch:", data["title"]);
             }).catch(() => { });
         }
 

@@ -13,6 +13,11 @@ function App() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => setIsDarkMode(e.matches);
     mediaQuery.addEventListener('change', handleChange);
+
+    // Notify background that side panel is open
+    // console.log("Side panel opened - notification sent to background");
+    chrome.runtime.sendMessage({ type: 'SIDE_PANEL_OPENED' });
+
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
