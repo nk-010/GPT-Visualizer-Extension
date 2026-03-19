@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
-import { injectFetchHook } from "./content";
+import { injectFetchHook } from "./index";
 
 describe("Test Content Script", () => {
     let appendSpy;
@@ -21,8 +21,8 @@ describe("Test Content Script", () => {
         injectFetchHook();
         expect(document.createElement).toHaveBeenCalledWith("script");
         expect(appendSpy).toHaveBeenCalled();
-        expect(chrome.runtime.getURL).toHaveBeenCalledWith("src/fetch.js");
-        expect(appendSpy.mock.calls[0][0].src).toBe("chrome-extension://mock-id/src/fetch.js");
+        expect(chrome.runtime.getURL).toHaveBeenCalledWith("src/scripts/fetch.js");
+        expect(appendSpy.mock.calls[0][0].src).toBe("chrome-extension://mock-id/src/scripts/fetch.js");
     });
 
     it("handles CHATGPT_CONVERSATION message and sends data", () => {

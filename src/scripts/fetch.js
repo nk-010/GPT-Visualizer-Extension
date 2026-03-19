@@ -19,6 +19,7 @@
                     window.postMessage({
                         type: "CHATGPT_CONVERSATION",
                         payload: data["mapping"],
+                        title: data["title"],
                         url: window.location.href
                     }, window.location.origin);
                 }
@@ -28,7 +29,7 @@
         return response;
     };
 
-    console.log("[GPT Visualizer] Fetch interceptor active");
+    // console.log("[GPT Visualizer] Fetch interceptor active");
 })();
 
 

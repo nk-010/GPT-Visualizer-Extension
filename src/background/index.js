@@ -1,4 +1,4 @@
-import contentScript from './src/content.js?script';   //importing the content script (vite specific)
+import contentScript from '../content/index.js?script';   //importing the content script (vite specific)
 
 //setting the side panel behavior (open panel on action click)
 chrome.sidePanel

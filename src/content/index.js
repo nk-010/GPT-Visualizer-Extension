@@ -4,7 +4,7 @@
 // Inject fetch interceptor
 export function injectFetchHook() {
     const script = document.createElement("script");
-    script.src = chrome.runtime.getURL("src/fetch.js");
+    script.src = chrome.runtime.getURL("src/scripts/fetch.js");
     script.type = "text/javascript";
 
     (document.head || document.documentElement).appendChild(script);
@@ -16,6 +16,7 @@ export function injectFetchHook() {
 
 injectFetchHook();
 
+let conversationTitle = null;
 let conversationData = null;
 
 
@@ -36,11 +37,13 @@ window.addEventListener("message", (event) => {
         // Only update and send if we have actual data
         if (payload && Object.keys(payload).length > 0) {
             conversationData = payload;
+            conversationTitle = event.data.title;
 
             // sending the data to the UI to display
             chrome.runtime.sendMessage({
                 type: "CHAT_DATA",
                 messages: conversationData,
+                title: conversationTitle,
                 url: location.href
             });
         }
@@ -64,6 +67,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.runtime.sendMessage({
             type: "CHAT_DATA",
             messages: conversationData,
+            title: conversationTitle,
             url: location.href
         });
     }

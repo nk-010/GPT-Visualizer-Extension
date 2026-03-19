@@ -11,6 +11,8 @@ const nodeTypes = {
     chatMessage: ChatMessageNode,
 };
 
+const { Text } = Typography;
+
 
 const ChatVisualizer = () => {
     const [messages, setMessages] = useState([]);
@@ -19,6 +21,9 @@ const ChatVisualizer = () => {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const messageRef = useRef(null);
+
+
+    const proOptions = { hideAttribution: true };
 
     /* To handle the messages from the content script */
     useEffect(() => {
@@ -213,17 +218,6 @@ const ChatVisualizer = () => {
 
     return (
         <div className="chat-visualizer-container">
-            {/* <div className="chat-header">
-                <Typography.Title level={4} style={{ margin: 0, fontWeight: 700 }}>
-                    Chat Flow Visualizer
-                </Typography.Title>
-                <Space>
-                    <button onClick={refreshData} className="refresh-button">
-                        Fetch Chat
-                    </button>
-                </Space>
-            </div> */}
-
 
             <div style={{ height: '550px', width: '100%', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
                 <ReactFlow
@@ -231,11 +225,11 @@ const ChatVisualizer = () => {
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
-                    // onConnect={onConnect}
                     onNodeClick={onNodeClick}
                     nodeTypes={nodeTypes}
                     fitView
                     colorMode="light"
+                    proOptions={proOptions}
                 >
                     <Background />
                     <Controls />
@@ -278,6 +272,10 @@ const ChatVisualizer = () => {
                     </div>
                 </div>
             )}
+
+            <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '8px' }}>
+                <Text type="secondary">Hint: If you face any issues, try closing and opening the tab again.</Text>
+            </div>
 
         </div>
     );

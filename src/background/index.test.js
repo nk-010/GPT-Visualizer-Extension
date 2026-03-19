@@ -18,7 +18,7 @@ describe("Test Background Script", () => {
         });
 
         // Dynamic import to trigger background.js side effects
-        await import("./background.js");
+        await import("./index.js");
     });
 
     beforeEach(() => {

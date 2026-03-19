@@ -5,14 +5,14 @@ import hotReloadExtension from 'hot-reload-extension-vite';
 import manifest from './manifest.json';
 
 // https://vite.dev/config/
-console.log('Building with NODE_ENV:', process.env.NODE_ENV);
+// console.log('Building with NODE_ENV:', process.env.NODE_ENV);
 
 export default defineConfig({
   plugins: [
     crx({ manifest: { ...manifest } }),
     hotReloadExtension({
       log: true,
-      backgroundPath: "background.js",
+      backgroundPath: "src/background/index.js",
       sidePanel: {
         path: "src/",
         htmlPath: "index.html"
