@@ -20,7 +20,13 @@ const Nav = () => {
     }, []);
 
     return (
-        <Header className="nav-header">
+        <Header 
+            className="nav-header" 
+            style={{ 
+                background: token.colorBgContainer,
+                borderBottom: `1px solid ${token.colorBorderSecondary || 'rgba(0, 0, 0, 0.06)'}`
+            }}
+        >
             <Flex align="center" gap={8} style={{ height: '100%', width: '100%' }}>
 
 

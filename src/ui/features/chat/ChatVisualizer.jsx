@@ -1,11 +1,12 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Typography, Empty, Tag, Space } from 'antd';
+import { useState, useEffect, useCallback, useRef, useContext } from 'react';
+import { Typography, Empty, Tag, Space, Button, theme } from 'antd';
 import { UserOutlined, RobotOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { ReactFlow, Background, Controls, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 
 import ChatMessageNode from './ChatMessageNode';
 import './ChatVisualizer.css';
+import { ThemeContext } from '../../App';
 
 const nodeTypes = {
     chatMessage: ChatMessageNode,
@@ -15,6 +16,8 @@ const { Text } = Typography;
 
 
 const ChatVisualizer = () => {
+    const { token } = theme.useToken();
+    const { isDarkMode } = useContext(ThemeContext);
     const [messages, setMessages] = useState([]);
     const [nodes, setNodes] = useState([]);
     const [edges, setEdges] = useState([]);
@@ -202,16 +205,16 @@ const ChatVisualizer = () => {
         return (
             <div className="empty-state">
                 <Empty description="No chat data detected. Open a ChatGPT conversation to start." />
-                <button
+                <Button
+                    type="primary"
                     onClick={() => {
                         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                             chrome.tabs.reload(tabs[0].id);
                         });
                     }}
-                    className="manual-refresh-btn"
                 >
                     Manual Refresh
-                </button>
+                </Button>
             </div>
         );
     }
@@ -219,7 +222,13 @@ const ChatVisualizer = () => {
     return (
         <div className="chat-visualizer-container">
 
-            <div style={{ height: '550px', width: '100%', border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{
+                height: '550px',
+                width: '100%',
+                border: `1px solid ${token.colorBorderSecondary}`,
+                borderRadius: token.borderRadiusLG,
+                overflow: 'hidden'
+            }}>
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
@@ -228,7 +237,7 @@ const ChatVisualizer = () => {
                     onNodeClick={onNodeClick}
                     nodeTypes={nodeTypes}
                     fitView
-                    colorMode="light"
+                    colorMode={isDarkMode ? 'dark' : 'light'}
                     proOptions={proOptions}
                 >
                     <Background />
@@ -237,8 +246,11 @@ const ChatVisualizer = () => {
             </div>
 
             {selectedMessage && (
-                <div className="message-details-container">
-                    <div className="details-header">
+                <div className="message-details-container" style={{
+                    background: token.colorBgContainer,
+                    borderColor: token.colorBorderSecondary
+                }}>
+                    <div className="details-header" style={{ borderColor: token.colorBorderSecondary }}>
                         <Space>
                             {selectedMessage.role === 'user' ? (
                                 <Tag color="blue" icon={<UserOutlined />}>User Message</Tag>
@@ -267,14 +279,20 @@ const ChatVisualizer = () => {
                             Close
                         </button>
                     </div>
-                    <div ref={messageRef} className="details-content">
+                    <div ref={messageRef} className="details-content" style={{ color: token.colorText }}>
                         {selectedMessage.content}
                     </div>
                 </div>
             )}
 
-            <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '8px' }}>
-                <Text type="secondary">Hint: If you face any issues, try closing and opening the tab again.</Text>
+            <div style={{
+                marginTop: '10px',
+                padding: '10px',
+                border: `1px solid ${token.colorBorderSecondary}`,
+                borderRadius: token.borderRadiusLG,
+                background: token.colorBgContainer
+            }}>
+                <Text type="secondary">Hint: If you face any issues, try closing and opening the extension again.</Text>
             </div>
 
         </div>

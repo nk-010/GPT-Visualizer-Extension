@@ -2,7 +2,9 @@ import './App.css'
 import { ConfigProvider } from 'antd'
 import { lightTheme, darkTheme } from './themes/themeConfig'
 import AppLayout from './features/layout/AppLayout'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createContext } from 'react'
+
+export const ThemeContext = createContext({ isDarkMode: false });
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(
@@ -22,11 +24,12 @@ function App() {
   }, []);
 
   return (
-    <ConfigProvider theme={isDarkMode ? darkTheme : lightTheme}>
-      <AppLayout />
-    </ConfigProvider>
+    <ThemeContext.Provider value={{ isDarkMode }}>
+      <ConfigProvider theme={isDarkMode ? darkTheme : lightTheme}>
+        <AppLayout />
+      </ConfigProvider>
+    </ThemeContext.Provider>
   )
 }
-
 
 export default App

@@ -1,5 +1,4 @@
 import { Layout, theme } from "antd";
-import Outlet from "./Outlet";
 import Nav from "./Nav";
 import ChatVisualizer from "../chat/ChatVisualizer";
 
@@ -7,13 +6,13 @@ const { Content } = Layout;
 
 export default function AppLayout() {
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token,
   } = theme.useToken();
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ minHeight: "100vh", background: token.colorBgLayout }}>
       <Nav />
-      <Content style={{ padding: "16px 5px" }}>
+      <Content style={{ padding: "16px 5px", background: 'transparent' }}>
         <ChatVisualizer />
       </Content>
     </Layout>

@@ -57,7 +57,7 @@ body {
 }
 
 .ant-layout {
-  background: #f8f9fa !important;
+  background: transparent;
 }
 
 .ant-list-item {
