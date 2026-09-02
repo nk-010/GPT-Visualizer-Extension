@@ -19,6 +19,74 @@ injectFetchHook();
 let conversationTitle = null;
 let conversationData = null;
 
+function mergeConversationMessages(existingMessages, incomingMessages) {
+    const nextMessages = { ...(existingMessages || {}) };
+
+    if (!incomingMessages || typeof incomingMessages !== 'object') {
+        return nextMessages;
+    }
+
+    Object.entries(incomingMessages).forEach(([messageKey, incomingMessage]) => {
+        if (!incomingMessage) return;
+
+        if (typeof incomingMessage !== 'object' || Array.isArray(incomingMessage)) {
+            nextMessages[messageKey] = incomingMessage;
+            return;
+        }
+
+        const message = {
+            ...incomingMessage,
+            id: incomingMessage.id || messageKey,
+        };
+
+        const existingMessage = nextMessages[message.id];
+        const mergedMessage = {
+            ...(existingMessage || {}),
+            ...message,
+            message: {
+                ...(existingMessage?.message || {}),
+                ...(message.message || {}),
+                author: {
+                    ...((existingMessage?.message?.author) || {}),
+                    ...((message.message && message.message.author) || {}),
+                },
+                content: {
+                    ...((existingMessage?.message?.content) || {}),
+                    ...((message.message && message.message.content) || {}),
+                },
+            },
+            children: Array.from(new Set([
+                ...(existingMessage?.children || []),
+                ...(message.children || []),
+            ])),
+            versionIds: Array.from(new Set([
+                ...(existingMessage?.versionIds || []),
+                ...(message.versionIds || []),
+            ])),
+        };
+
+        nextMessages[message.id] = mergedMessage;
+
+        if (message.parentId && message.parentId !== null && !nextMessages[message.parentId]) {
+            nextMessages[message.parentId] = {
+                id: message.parentId,
+                children: [message.id],
+                message: { author: { role: 'system' }, content: { parts: [''] } },
+            };
+        }
+
+        if (message.parentId && nextMessages[message.parentId]) {
+            const parentChildren = new Set(nextMessages[message.parentId].children || []);
+            parentChildren.add(message.id);
+            nextMessages[message.parentId] = {
+                ...nextMessages[message.parentId],
+                children: Array.from(parentChildren),
+            };
+        }
+    });
+
+    return nextMessages;
+}
 
 // Listen for messages from fetch.js (window listener because message is sent from a script)
 window.addEventListener("message", (event) => {
@@ -34,12 +102,25 @@ window.addEventListener("message", (event) => {
     if (event.data?.type === "CHATGPT_CONVERSATION") {
         const payload = event.data.payload;
 
-        // Only update and send if we have actual data
         if (payload && Object.keys(payload).length > 0) {
-            conversationData = payload;
-            conversationTitle = event.data.title;
+            conversationData = mergeConversationMessages(conversationData, payload);
+            conversationTitle = event.data.title || conversationTitle;
 
-            // sending the data to the UI to display
+            chrome.runtime.sendMessage({
+                type: "CHAT_DATA",
+                messages: conversationData,
+                title: conversationTitle,
+                url: location.href
+            });
+        }
+    }
+
+    if (event.data?.type === "CHATGPT_VERSION_RESPONSE") {
+        const payload = event.data.payload;
+
+        if (payload && Object.keys(payload).length > 0) {
+            conversationData = mergeConversationMessages(conversationData, payload);
+
             chrome.runtime.sendMessage({
                 type: "CHAT_DATA",
                 messages: conversationData,
@@ -52,7 +133,7 @@ window.addEventListener("message", (event) => {
 
 
 /* Listen for messages from background.js */
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
     if (request.type === "PAGE_CHANGED" || request.type === "SIDE_PANEL_OPENED") {
 
         if (request.type === "PAGE_CHANGED") {

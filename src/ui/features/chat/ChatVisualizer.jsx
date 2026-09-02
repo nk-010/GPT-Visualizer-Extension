@@ -31,9 +31,9 @@ const ChatVisualizer = () => {
     /* To handle the messages from the content script */
     useEffect(() => {
         // Listen for messages from content script
-        const handleMessage = (request, sender, sendResponse) => {
+        const handleMessage = (request, _sender, _sendResponse) => {
             if (request.type === 'CHAT_DATA') {
-                // console.log('Received chat data:', request?.messages);
+                console.log('Received chat data:', request?.messages);
                 setMessages(request?.messages);
                 setIsLoading(false);
             } else if (request.type === 'PAGE_CHANGED') {
@@ -62,65 +62,93 @@ const ChatVisualizer = () => {
 
     /* To build the tree structure from the messages */
     useEffect(() => {
+        const messageMap = messages && !Array.isArray(messages)
+            ? messages
+            : Array.isArray(messages)
+                ? Object.fromEntries(messages.map((message) => [message.id, message]))
+                : {};
 
-        if (!messages || Object.keys(messages).length === 0) return;
+        if (!messageMap || Object.keys(messageMap).length === 0) return;
 
         const nodes = [];
         const edges = [];
 
         const horizontalSpacing = 300;
         const verticalSpacing = 150;
+        const NODE_WIDTH = 250;
+        const MIN_SIBLING_GAP = 80;
+        const MAX_SIBLING_GAP = 180;
+        const siblingGap = Math.min(MAX_SIBLING_GAP, Math.max(MIN_SIBLING_GAP, horizontalSpacing - NODE_WIDTH));
 
+        function getSubtreeWidth(nodeId, ancestors = new Set()) {
+            const node = messageMap[nodeId];
+            if (!node) return 1;
+            if (ancestors.has(nodeId)) return 1;
 
-        function getSubtreeWidth(nodeId) {
-            /* function to get the width of the subtree */
-
-            const node = messages[nodeId];
-            if (!node) return 1; // leaf node counts as 1 unit
-
-            const children = node.children || [];
-
-            // recursively sum widths of children
+            const children = Array.isArray(node.children) ? node.children.filter((childId) => messageMap[childId]) : [];
             if (children.length === 0) return 1;
 
-            return children.reduce((sum, childId) => sum + getSubtreeWidth(childId), 0);
+            const nextAncestors = new Set(ancestors);
+            nextAncestors.add(nodeId);
+            return children.reduce((sum, childId) => sum + getSubtreeWidth(childId, nextAncestors), 0);
+        }
+
+        function calculateChildrenLayout(children, parentCenterX) {
+            const subtreeWidths = children.map((childId) => getSubtreeWidth(childId));
+            const childWidths = subtreeWidths.map((subtreeWidth) => Math.max(NODE_WIDTH, subtreeWidth * NODE_WIDTH));
+            const totalWidth = childWidths.reduce((sum, width) => sum + width, 0)
+                + Math.max(0, children.length - 1) * siblingGap;
+            const groupStartX = parentCenterX - totalWidth / 2;
+            let cursorX = groupStartX;
+
+            const layouts = children.map((childId, index) => {
+                const width = childWidths[index];
+                const childCenterX = cursorX + width / 2;
+                cursorX += width + siblingGap;
+
+                return {
+                    childId,
+                    x: childCenterX - NODE_WIDTH / 2,
+                };
+            });
+
+            return { layouts, subtreeWidths, totalWidth, groupStartX };
         }
 
         function buildTree(nodeId, depth = 0, startX = 0, parentVisibleId = null) {
-            /* function to build the tree structure */
-
-            const node = messages[nodeId];
+            const node = messageMap[nodeId];
             if (!node) return;
 
-            const role = node?.message?.author?.role || "system";
-            const content = node?.message?.content?.parts?.[0] || "";
-            const preview = content?.slice(0, 80) + (content?.length > 80 ? "..." : "");
-            const children = node.children || [];
-            const createTime = node?.message?.create_time || "";
+            const role = node?.message?.author?.role || node?.role || 'system';
+            const content = Array.isArray(node?.message?.content?.parts)
+                ? node.message.content.parts.join(' ')
+                : node?.message?.content?.text || node?.message?.content || '';
+            const preview = content?.slice(0, 80) + (content?.length > 80 ? '...' : '');
+            const children = Array.isArray(node.children) ? node.children.filter((childId) => messageMap[childId]) : [];
+            const createTime = node?.message?.create_time || node?.timestamp || '';
 
             let shouldRenderSystem = false;
 
-            if (role === "system") shouldRenderSystem = children.length > 2;
-            else if (role === "assistant") shouldRenderSystem = content?.length > 0;
-            else if (role === "user") shouldRenderSystem = true;
+            if (role === 'system') shouldRenderSystem = children.length > 2;
+            else if (role === 'assistant') shouldRenderSystem = content?.length > 0;
+            else if (role === 'user') shouldRenderSystem = true;
 
             let currentVisibleId = parentVisibleId;
 
             if (shouldRenderSystem) {
-
-
                 nodes.push({
                     id: node.id,
                     type: 'chatMessage',
                     data: {
-                        label: preview || "",
+                        label: preview || '',
                         role: role,
                         fullContent: content,
-                        queryTime: createTime
+                        queryTime: createTime,
+                        versionCount: node?.version_count || node?.versionIds?.length || 0,
                     },
                     position: {
                         x: startX,
-                        y: depth * verticalSpacing
+                        y: depth * verticalSpacing,
                     }
                 });
 
@@ -128,7 +156,7 @@ const ChatVisualizer = () => {
                     edges.push({
                         id: `${parentVisibleId}-${node.id}`,
                         source: parentVisibleId,
-                        target: node.id
+                        target: node.id,
                     });
                 }
 
@@ -136,26 +164,36 @@ const ChatVisualizer = () => {
                 depth += 1;
             }
 
-            // Compute dynamic x positions for children
-            let childX = startX;
-            children.forEach((childId) => {
-                const subtreeWidth = getSubtreeWidth(childId) * horizontalSpacing;
-                buildTree(childId, depth, childX, currentVisibleId);
-                childX += subtreeWidth;
-            });
+            if (children.length > 0) {
+                const parentCenterX = startX + NODE_WIDTH / 2;
+                const childLayout = calculateChildrenLayout(children, parentCenterX);
+
+                if (import.meta.env.DEV && children.length > 1) {
+                    console.debug('ChatVisualizer child layout', {
+                        parentId: node.id,
+                        parentCenterX,
+                        children,
+                        subtreeWidths: childLayout.subtreeWidths,
+                        totalWidth: childLayout.totalWidth,
+                        groupStartX: childLayout.groupStartX,
+                        childX: childLayout.layouts.map(({ childId, x }) => ({ childId, x })),
+                    });
+                }
+
+                children.forEach((childId, index) => {
+                    buildTree(childId, depth, childLayout.layouts[index].x, currentVisibleId);
+                });
+            }
         }
 
-        /* To find the root of the tree */
-        const allMessages = Object.values(messages);
-        const root = allMessages.find(
-            m => !allMessages.some(msg => msg.id === m.parent)
-        );
+        const allMessages = Object.values(messageMap);
+        const root = allMessages.find((message) => {
+            const parentId = message.parentId || message.parent;
+            return !parentId || !allMessages.some((candidate) => candidate.id === parentId);
+        }) || allMessages[0];
 
         if (root) {
             buildTree(root.id);
-        }
-        else {
-            console.log("No root found");
         }
 
         setNodes(nodes);
@@ -201,7 +239,13 @@ const ChatVisualizer = () => {
         );
     }
 
-    if (messages?.length === 0) {
+    const messageCount = Array.isArray(messages)
+        ? messages.length
+        : messages && typeof messages === 'object'
+            ? Object.keys(messages).length
+            : 0;
+
+    if (messageCount === 0) {
         return (
             <div className="empty-state">
                 <Empty description="No chat data detected. Open a ChatGPT conversation to start." />

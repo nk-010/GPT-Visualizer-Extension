@@ -59,7 +59,7 @@ identifyTabChange();
    Listen for messages from the side panel (UI)
    and forward them to the content script.
 */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
     if (message.type === 'SIDE_PANEL_OPENED') {
         // Forward the event to the active tab's content script
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

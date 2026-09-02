@@ -12,7 +12,7 @@ const Nav = () => {
     const [chatTitle, setChatTitle] = useState("");
 
     useEffect(() => {
-        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        chrome.runtime.onMessage.addListener((request, _sender, _sendResponse) => {
             if (request.type === "CHAT_DATA") {
                 setChatTitle(request?.title);
             }

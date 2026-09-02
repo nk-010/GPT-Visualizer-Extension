@@ -7,7 +7,6 @@ const { Text } = Typography;
 const ChatMessageNode = ({ data, selected }) => {
     const { token } = theme.useToken();
     const isUser = data.role === 'user';
-    const isAssistant = data.role === 'assistant';
     const isSystem = data.role === 'system';
 
     // console.log(data);

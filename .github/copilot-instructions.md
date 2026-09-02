@@ -1,48 +1,52 @@
 # Copilot Workspace Instructions
 
 ## Project overview
-This repo contains a Chrome Extension built with Vite + React + TypeScript-like React JSX and uses `@crxjs/vite-plugin` for extension bundling. The extension code is in `src/` with typed components under `src/ui` and extension entrypoints under `src/background`, `src/content`, and `src/scripts`.
+This repo is a Chrome extension that turns ChatGPT conversations into a visual graph of message flow, history, and editing behavior. The app is built with Vite + React and uses `@crxjs/vite-plugin` for extension bundling.
 
-### Key folders
-- `src/background`: extension background scripts and service worker logic.
-- `src/content`: content scripts injected into web pages.
-- `src/scripts`: shared helper code used by extension scripts.
-- `src/ui`: React app and UI components for extension popup/pages.
-- `public/manifest.json`: Chrome extension manifest and permissions.
+## Architecture and key entry points
+- `manifest.json`: Chrome extension manifest. This is the source of truth for permissions, side panel configuration, content script injection, and web-accessible resources.
+- `src/background/index.js`: background/service worker code. Keep lifecycle and messaging logic here.
+- `src/content/index.js`: page-level script injected into `https://chat.openai.com/*` and `https://chatgpt.com/*` to extract data from the live page.
+- `src/scripts/fetch.js`: shared helper code used by extension scripts; prefer reusing it rather than duplicating fetch logic.
+- `src/ui/`: React UI for the side panel and chat visualizer.
+- `src/ui/features/`: feature-level components and styles. Follow the existing breakdown under `chat` and `layout`.
+- `src/ui/themes/themeConfig.js`: shared theme tokens and palette settings.
 
-## Quick start
-1. Open terminal in `gpt_visualizer`.
-2. Install dependencies:
+## Working conventions
+- Use React functional components and keep UI logic in `src/ui` unless it truly belongs to a browser-extension runtime layer.
+- Keep the extension runtime, page script, and UI separate. Do not mix page-specific logic into React components unless the behavior is required for rendering.
+- Preserve the existing feature-folder pattern: component + CSS alongside the feature, not in a one-off global stylesheet unless it is truly shared.
+- Tests belong next to the source files they validate, using Vitest. Prefer existing patterns in `src/**/*.test.*`.
+- If you change permissions, host matches, or extension APIs, update `manifest.json` and verify the runtime still matches the extension’s actual behavior.
+- Prefer minimal, targeted edits. The repo is small and extension-specific behaviors are easy to break if changes are broad.
+
+## Development workflow
+1. Install dependencies:
    - `npm install`
-3. Run development build + local dev server:
+2. Start local development:
    - `npm run dev`
-4. Load extension in Chrome for local development:
-   - Open `chrome://extensions`
-   - Enable Developer mode
-   - Click "Load unpacked" and select the `gpt_visualizer/dist` folder (or follow plugin-specific dev instructions if using dynamic dev mode)
+3. For faster reload cycles during extension work:
+   - `npm run dev:watch`
+4. Build the extension bundle:
+   - `npm run build`
+5. Test and lint:
+   - `npm run test -- --run`
+   - `npm run lint`
 
-## Run and test
-- `npm run dev` — run Vite development server for extension front-end (hot reload)
-- `npm run build` — production build to `dist/`
-- `npm run preview` — preview built extension package
-- `npm run lint` — run ESLint checks
-- `npm run test` — run Vitest suite
-- `npm run test:ui` — run Vitest UI runner
+## Chrome extension-specific guidance
+- Load the unpacked build from the generated `dist/` folder in Chrome, not directly from `src/`.
+- Manifest and content-script changes require a rebuild and extension reload in Chrome.
+- The extension targets OpenAI/ChatGPT domains only; keep host permissions and match patterns aligned with the actual behavior.
+- Side-panel logic is initiated from the React app and browser runtime messaging, so both sides need to stay in sync.
 
-## Architecture and conventions
-- Use React + function components in `src/ui`.
-- Keep extension-specific logic in `src/background`, `src/content`, and `src/scripts`.
-- Tests reside next to code (`.test.js` files) and run with Vitest.
-- Keep styling scoped per feature folder (`src/ui/features/*` and `src/ui/App.css`).
+## Common pitfalls
+- Do not assume a browser-only UI can safely access page state without going through the extension content script flow.
+- Avoid large refactors in a single change; this repo’s extension wiring is compact but sensitive to runtime boundaries.
+- If a change affects UI, background, or manifest behavior together, validate the whole integration path rather than only the component in isolation.
 
-## Suggested Copilot workflows
-- To add a new feature, modify `src/ui/features/`, then update UI route/outlet in `src/ui/App.jsx`.
-- For background and content script changes, update `public/manifest.json` and validate the required permissions.
-- When adding new tests, keep them in the same directory as related files with `.test.jsx` or `.test.js`.
-
-## Troubleshooting
-- If extension changes are not reflected, rebuild and reload in Chrome.
-- For manifest or extension API issues, verify `manifest.json` version and permission scopes.
-- If tests fail due to environment, run `npm run test -- --run` to isolate failing tests.
+## Suggested Copilot workflow
+- For feature work, start in `src/ui/features/` and keep the feature structure consistent with the existing layout.
+- For page/extension integration work, validate `manifest.json`, `src/content/index.js`, and the relevant browser messages together.
+- When adding tests, keep them colocated with the module under test and prefer checks that exercise real behavior over mock-heavy assertions.
 
 ---
